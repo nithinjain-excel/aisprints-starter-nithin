@@ -56,8 +56,7 @@ export const registrationSchema = z.object({
   password: passwordSchema,
   
   role: z.enum(['instructor', 'student'], {
-    required_error: 'Please select a role',
-    invalid_type_error: 'Role must be either instructor or student',
+    message: 'Please select a role',
   }),
 });
 

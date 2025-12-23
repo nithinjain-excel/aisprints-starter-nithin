@@ -61,20 +61,31 @@ function normalizePlaceholders(sql: string): string {
 /**
  * Get the D1 database instance from the environment.
  * In Cloudflare Workers, this is provided via env.DB binding.
+ * For local development with `next dev`, a mock database is used.
  * 
- * @returns D1Database instance
- * @throws Error if database binding is not available
+ * @returns Promise resolving to D1Database instance
  */
-export function getDatabase(): D1Database {
-  // In Next.js/Cloudflare environment, the database is available via process.env
-  // @ts-ignore - This will be available at runtime in Cloudflare Workers
-  const db = process.env.DB || global.__D1_DB__;
-  
-  if (!db) {
-    throw new Error('D1 database binding not found. Ensure DB is configured in wrangler.jsonc');
+export async function getDatabase(): Promise<D1Database> {
+  // Try to get the Cloudflare context (works in production/preview)
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const { env } = getCloudflareContext();
+    
+    if (env.DB) {
+      return env.DB;
+    }
+  } catch {
+    // getCloudflareContext() may not be available in all contexts
+    console.log('Cloudflare context not available, falling back to mock database');
   }
   
-  return db as D1Database;
+  // Fallback to mock database for local development
+  if (process.env.NODE_ENV === 'development' || process.env.NEXTJS_ENV === 'development') {
+    const { getMockDatabase } = await import('./d1-mock');
+    return getMockDatabase();
+  }
+  
+  throw new Error('D1 database binding not found. Ensure DB is configured in wrangler.jsonc');
 }
 
 /**

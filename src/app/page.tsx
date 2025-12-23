@@ -1,52 +1,99 @@
-import Image from "next/image";
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { verifySession } from '@/lib/utils/session';
+import { getUserById } from '@/lib/services/auth-service';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { LogoutButton } from '@/components/auth/logout-button';
 
-export default function Home() {
-	return (
-		<div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-				<Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
-				<ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-					<li className="mb-2 tracking-[-.01em]">
-						Get started by editing{" "}
-						<code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-							src/app/page.tsx
-						</code>
-						.
-					</li>
-					<li className="tracking-[-.01em]">Save and see your changes instantly.</li>
-				</ol>
+export default async function Home() {
+  // Middleware handles authentication - if we reach here, user is authenticated
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session')?.value;
+  
+  // This should always exist due to middleware, but we check for type safety
+  if (!sessionToken) {
+    redirect('/login');
+  }
 
-				<div className="flex gap-4 items-center flex-col sm:flex-row">
-					<a
-						className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-						href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Read our docs
-					</a>
-				</div>
-			</main>
-			<footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-					Learn
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-					Go to nextjs.org →
-				</a>
-			</footer>
-		</div>
-	);
+  const session = await verifySession(sessionToken);
+  if (!session) {
+    redirect('/login');
+  }
+
+  // Get user data
+  const user = await getUserById(session.userId);
+  if (!user) {
+    redirect('/login');
+  }
+
+  const fullName = user.lastName 
+    ? `${user.firstName} ${user.lastName}` 
+    : user.firstName;
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted p-6">
+      <div className="w-full max-w-2xl space-y-6">
+        {/* Header with Logout */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">QuizMaker</h1>
+          <LogoutButton />
+        </div>
+
+        {/* Welcome Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Welcome back, {fullName}!</CardTitle>
+            <CardDescription>
+              Logged in as{' '}
+              <Badge variant="secondary" className="ml-1">
+                {user.role === 'instructor' ? 'Instructor' : 'Student'}
+              </Badge>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium">{user.email}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Placeholder Card for Future Features */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Welcome to QuizMaker!</CardTitle>
+            <CardDescription>
+              Your quiz management platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">Coming soon:</p>
+              <ul className="space-y-2 pl-5 list-disc">
+                {user.role === 'instructor' ? (
+                  <>
+                    <li>Create and manage multiple-choice quizzes</li>
+                    <li>Build question banks for your courses</li>
+                    <li>Assign quizzes to students</li>
+                    <li>View student results and analytics</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Take quizzes assigned by your instructors</li>
+                    <li>View your quiz results and feedback</li>
+                    <li>Track your progress over time</li>
+                    <li>Access quiz history and scores</li>
+                  </>
+                )}
+              </ul>
+              <p className="pt-3 text-xs italic">
+                MCQ authoring and quiz-taking features will be available in the next phase.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }

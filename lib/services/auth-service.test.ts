@@ -9,7 +9,7 @@ import * as passwordUtils from '../utils/password';
 
 // Mock the d1-client module
 vi.mock('../d1-client', () => ({
-  getDatabase: vi.fn(() => ({} as any)),
+  getDatabase: vi.fn(() => ({} as unknown)),
   executeQueryFirst: vi.fn(),
   executeMutation: vi.fn(),
 }));
@@ -320,7 +320,7 @@ describe('Authentication Service', () => {
       const result = await getUserById('user123');
 
       expect(result).toBeDefined();
-      expect('password_hash' in (result as any)).toBe(false);
+      expect('password_hash' in (result as unknown as Record<string, unknown>)).toBe(false);
     });
   });
 

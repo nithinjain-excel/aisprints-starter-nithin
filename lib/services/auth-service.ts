@@ -74,7 +74,7 @@ function mapDatabaseUserToUser(dbUser: DatabaseUser): User {
  * });
  */
 export async function registerUser(data: RegistrationData): Promise<User> {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   // Hash the password before storing
   const passwordHash = await hashPassword(data.password);
@@ -106,9 +106,10 @@ export async function registerUser(data: RegistrationData): Promise<User> {
     
     // Convert database format to public User format
     return mapDatabaseUserToUser(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Check if error is due to unique constraint violation (duplicate email)
-    if (error.message?.includes('UNIQUE constraint failed')) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage?.includes('UNIQUE constraint failed')) {
       throw new Error('Email already registered');
     }
     
@@ -136,7 +137,7 @@ export async function registerUser(data: RegistrationData): Promise<User> {
  * }
  */
 export async function loginUser(data: LoginData): Promise<User | null> {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   // Query for user by email
   const sql = `
@@ -187,7 +188,7 @@ export async function loginUser(data: LoginData): Promise<User | null> {
  * }
  */
 export async function getUserById(userId: string): Promise<User | null> {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const sql = `
     SELECT id, email, password_hash, first_name, last_name, role, created_at, updated_at
@@ -223,7 +224,7 @@ export async function getUserById(userId: string): Promise<User | null> {
  * }
  */
 export async function emailExists(email: string): Promise<boolean> {
-  const db = getDatabase();
+  const db = await getDatabase();
   
   const sql = `
     SELECT COUNT(*) as count
