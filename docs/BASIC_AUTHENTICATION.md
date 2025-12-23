@@ -2,62 +2,26 @@
 
 ## Overview
 
-This document outlines the requirements for implementing basic authentication in the QuizMaker application. The system will provide user registration and login capabilities with role-based access (Instructor and Student) to support secure access control and user management. This authentication system serves as the foundation for all future quiz creation and management features.
+This document outlines the requirements for implementing basic authentication in the QuizMaker application. The system will provide user registration and login capabilities with role-based access (Instructor and Student) to support secure access control and user management.
 
-**Phased Approach:**
-- **Current Phase (Phases 1-7)**: Building **simple, basic authentication** system
-  - Username/password login (email + password)
-  - Simple JWT session management (HTTP-only cookies)
-  - Core features only: register, login, logout, session validation
-  - **No advanced features** (refresh tokens, social login, etc.)
-  
-- **Home Page**: Simple placeholder page showing welcome message and user role for both instructors and students
+**Implementation Approach**: Simple JWT-based authentication with HTTP-only cookies across 7 phases (Database → Services → API → UI → Pages → Middleware → Production).
 
-- **Future Phases**: 
-  - **Phase 8**: MCQ authoring interface for instructors and quiz-taking interface for students
-  - **Phase 9+**: Enhanced authentication features (refresh tokens, social login, 2FA, etc.) if needed
+**Scope**:
+- ✅ Username/password login (email + password)
+- ✅ JWT session management (HTTP-only cookies, 7-day expiration)
+- ✅ Core features: register, login, logout, session validation
+- ✅ Password hashing (bcrypt), role-based access (Instructor/Student)
+- ❌ NO advanced features in Phase 1-7 (refresh tokens, social login, 2FA, etc.)
 
-**What "Basic Authentication" Means Here:**
-- ✅ Simple username/password login (email + password)
-- ✅ Essential session management using JWT (simplest modern approach)
-- ✅ Core security (password hashing, HTTP-only cookies)
-- ❌ NO advanced features in Phase 1 (those come later if needed)
+**Future Phases**: Phase 8 adds MCQ features; Phase 9+ adds advanced auth features if needed
 
 ---
 
-## Authentication Strategy
+## Business Requirements
 
-### Phased Implementation Approach
+> **Note**: For detailed authentication strategy explanation, JWT comparison, and technical decision rationale, see the "Authentication Strategy & Technical Decisions" section in Technical Implementation Details below.
 
-This authentication system will be built in phases to ensure a solid foundation while maintaining simplicity:
-
-**Phase 1 (Current Scope - Phases 1-7):**
-- Simple username/password authentication (email + password)
-- Basic session management using JWT tokens in HTTP-only cookies
-- Core authentication features: login, register, logout, session validation
-- No advanced features (refresh tokens, token revocation, social login)
-
-**Phase 2 (Future - Phase 9+):**
-- Enhanced JWT features (refresh tokens, token blacklisting)
-- Advanced session management (multiple device tracking)
-- Social login integration (Google, GitHub)
-- Two-factor authentication (2FA)
-- Advanced security features (rate limiting, account lockout)
-
-### Current Implementation: JWT Token-Based Authentication with HTTP-Only Cookies
-
-For the initial implementation (Phases 1-7), we will use a **simple JWT (JSON Web Token) authentication** stored in **HTTP-only cookies**. This provides the essential session management needed for modern web applications while keeping the implementation straightforward.
-
-**Why Start with JWT (Even for "Basic Auth")?**
-
-Even basic authentication needs session management. Without JWT or sessions, users would need to enter their credentials on every page request. JWT with HTTP-only cookies is the simplest modern approach that:
-- Maintains user sessions across requests
-- Works seamlessly with Cloudflare Workers (serverless)
-- Provides security out of the box
-- Requires minimal infrastructure
-- Can be enhanced later without major refactoring
-
-### What We're Building in Phase 1 (Simple Implementation)
+### User Management
 
 **Core Authentication Features:**
 - ✅ User registration with email and password
