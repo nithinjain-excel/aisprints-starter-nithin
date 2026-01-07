@@ -58,8 +58,8 @@ export function LoginForm() {
       const result = await response.json() as LoginResponse;
 
       if (response.ok && result.success) {
-        // Redirect to home page on successful login
-        router.push('/');
+        // Redirect to dashboard on successful login
+        router.push('/dashboard');
         router.refresh();
       } else {
         setError(result.error || 'Login failed. Please try again.');

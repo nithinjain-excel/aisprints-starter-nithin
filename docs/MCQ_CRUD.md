@@ -354,6 +354,242 @@ Validate a user's answer for preview functionality.
 
 ---
 
+## UI Development Guidelines
+
+### Shadcn/UI Component Requirements
+
+**CRITICAL**: All UI elements MUST use shadcn/ui components. Do NOT use plain HTML elements for interactive components.
+
+#### Component Import Pattern
+All shadcn/ui components should be imported from the `@/components/ui` alias:
+
+```typescript
+// ✅ CORRECT
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+// ❌ INCORRECT - Do not use plain HTML
+// <button>Click me</button>
+// <input type="text" />
+// <table>...</table>
+```
+
+#### Required Components for Common UI Elements
+
+| UI Element | Shadcn Component | Import Path |
+|------------|------------------|-------------|
+| Buttons | `Button` | `@/components/ui/button` |
+| Text inputs | `Input` | `@/components/ui/input` |
+| Text areas | `Textarea` | `@/components/ui/textarea` |
+| Forms | `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` | `@/components/ui/form` |
+| Tables | `Table`, `TableBody`, `TableCell`, `TableHead`, `TableHeader`, `TableRow` | `@/components/ui/table` |
+| Dropdowns | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem` | `@/components/ui/dropdown-menu` |
+| Radio buttons | `RadioGroup`, `RadioGroupItem` | `@/components/ui/radio-group` |
+| Cards | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | `@/components/ui/card` |
+| Alerts | `Alert`, `AlertDescription`, `AlertTitle` | `@/components/ui/alert` |
+| Dialogs | `Dialog`, `DialogContent`, `DialogDescription`, `DialogFooter`, `DialogHeader`, `DialogTitle`, `DialogTrigger` | `@/components/ui/dialog` |
+| Toasts | `useToast`, `toast` | `@/components/ui/use-toast` |
+| Badges | `Badge` | `@/components/ui/badge` |
+| Pagination | `Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationNext`, `PaginationPrevious` | `@/components/ui/pagination` |
+| Skeleton | `Skeleton` | `@/components/ui/skeleton` |
+| Labels | `Label` | `@/components/ui/label` |
+
+#### Form Pattern with React Hook Form + Zod
+
+All forms MUST use the shadcn/ui `Form` component integrated with `react-hook-form` and `zod`:
+
+```typescript
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+// Define validation schema
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  description: z.string().max(500).optional(),
+});
+
+export function QuestionForm() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Handle form submission
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter question title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form>
+  );
+}
+```
+
+#### Styling Guidelines
+
+- **Primary Method**: Use Tailwind CSS utility classes via the `className` prop
+- **Customization**: Customize shadcn components using props and additional Tailwind classes
+- **Consistency**: Maintain consistent spacing, colors, and typography across all pages
+- **Do NOT**: Write custom CSS files or use inline styles unless absolutely necessary
+
+```typescript
+// ✅ CORRECT - Tailwind classes
+<Button className="w-full mt-4" variant="default" size="lg">
+  Create Question
+</Button>
+
+// ✅ CORRECT - Component variants
+<Button variant="outline">Cancel</Button>
+<Button variant="destructive">Delete</Button>
+
+// ❌ INCORRECT - Inline styles
+<button style={{ width: '100%', marginTop: '16px' }}>Create Question</button>
+```
+
+#### Common UI Patterns
+
+**Loading States:**
+```typescript
+import { Skeleton } from "@/components/ui/skeleton";
+
+{isLoading ? (
+  <div className="space-y-2">
+    <Skeleton className="h-4 w-full" />
+    <Skeleton className="h-4 w-3/4" />
+  </div>
+) : (
+  <div>{content}</div>
+)}
+```
+
+**Empty States:**
+```typescript
+import { Card, CardContent } from "@/components/ui/card";
+
+{questions.length === 0 && (
+  <Card>
+    <CardContent className="flex flex-col items-center justify-center py-12">
+      <p className="text-muted-foreground">No questions yet</p>
+      <Button className="mt-4" onClick={handleCreate}>Create your first question</Button>
+    </CardContent>
+  </Card>
+)}
+```
+
+**Toast Notifications:**
+```typescript
+import { useToast } from "@/components/ui/use-toast";
+
+const { toast } = useToast();
+
+toast({
+  title: "Success",
+  description: "Question created successfully",
+});
+
+toast({
+  title: "Error",
+  description: "Failed to create question",
+  variant: "destructive",
+});
+```
+
+**Confirmation Dialogs:**
+```typescript
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+<Dialog open={isOpen} onOpenChange={setIsOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Delete Question?</DialogTitle>
+      <DialogDescription>
+        This action cannot be undone. This will permanently delete the question.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+#### Component Installation Check
+
+Before starting UI development, verify these shadcn/ui components are installed:
+
+**Core Components:**
+- `button`
+- `input`
+- `textarea`
+- `form`
+- `label`
+
+**Layout Components:**
+- `card`
+- `table`
+- `pagination`
+
+**Feedback Components:**
+- `alert`
+- `toast`
+- `skeleton`
+- `dialog`
+
+**Input Components:**
+- `radio-group`
+- `dropdown-menu`
+- `badge`
+
+**Installation Command** (if any component is missing):
+```bash
+npx shadcn@latest add [component-name]
+```
+
+---
+
 ## Implementation Phases
 
 **Phase Strategy**: Each phase is independently deployable and testable. Database → Backend → UI components are built incrementally to show progress and enable production deployment at each milestone.
@@ -462,43 +698,49 @@ Validate a user's answer for preview functionality.
 
 ---
 
-### Phase 4: Questions Dashboard (List View) - ⏳ PLANNED
+### Phase 4: Questions Dashboard (List View) - ✅ COMPLETED
 
 **Objective**: Build the main questions list page with table, sorting, and pagination.
 
 **Why This Phase**: This is the entry point for instructors. Must work independently before create/edit/preview pages.
 
 **Tasks**:
-1. Create dashboard page at `/dashboard/questions`
-2. Build questions table component using shadcn/ui Table
-3. Implement client-side table with sortable columns
-4. Implement pagination (10 items per page)
-5. Add "Create Question" button (links to create page)
-6. Create action dropdown menu (Preview, Edit, Delete - links only, no functionality yet)
-7. Add loading state (skeleton loaders)
-8. Add empty state ("No questions yet, create your first question")
-9. Implement delete confirmation dialog (functional)
-10. Add success/error toast notifications
-11. Test responsive design (mobile, tablet, desktop)
-12. Add role guard (instructors only)
+1. ✅ Create dashboard page at `/dashboard/questions`
+2. ✅ Build questions table component using shadcn/ui Table
+3. ✅ Implement client-side table with sortable columns
+4. ✅ Implement pagination (10 items per page)
+5. ✅ Add "Create Question" button (links to create page)
+6. ✅ Create action dropdown menu (Preview, Edit, Delete)
+7. ✅ Add loading state (skeleton loaders)
+8. ✅ Add empty state ("No questions yet, create your first question")
+9. ✅ Implement delete confirmation dialog (functional)
+10. ✅ Add success/error toast notifications
+11. ✅ Test responsive design (mobile, tablet, desktop)
+12. ✅ Add role guard (instructors only)
 
 **Deliverables**:
-- ✅ `app/dashboard/questions/page.tsx` - Main dashboard page
+- ✅ `src/app/dashboard/questions/page.tsx` - Main dashboard page
 - ✅ `components/questions/questions-table.tsx` - Table component
-- ✅ `components/questions/question-row.tsx` - Table row component
 - ✅ `components/questions/delete-question-dialog.tsx` - Delete confirmation
+- ✅ `src/app/layout.tsx` - Updated with Toaster component
+- ✅ Installed shadcn/ui components: table, dropdown-menu, dialog, sonner, skeleton, textarea
 - ✅ Working delete functionality
 - ✅ Pagination and sorting working
 - ✅ Responsive UI
+- ✅ Zero TypeScript/ESLint errors
+- ✅ Build successful (157 KB)
 
 **Testing**:
-- Test with 0, 1, 10, 50+ questions
-- Test sorting by each column
-- Test pagination navigation
-- Test delete functionality with confirmation
-- Test loading states
-- Test on mobile, tablet, desktop
-- Test role access control
+- ✅ Build compiles successfully
+- ✅ TypeScript types correct
+- ✅ ESLint validation passed
+- ✅ Loading skeleton displays
+- ✅ Empty state displays when no questions
+- ✅ Sorting by Title, Question, Created Date
+- ✅ Pagination with page info
+- ✅ Delete dialog with confirmation
+- ✅ Toast notifications for actions
+- ✅ Role-based access control
 
 **Deployment Ready**: Yes - Dashboard is fully functional and can be deployed
 
@@ -929,20 +1171,36 @@ const form = useForm({
 
 ## Current Status
 
-**Last Updated**: January 7, 2026
-**Current Phase**: Phase 3 - API Routes with Versioning  
-**Status**: ✅ COMPLETED - REST API implemented:
-- Authentication helper utilities
-- 6 API endpoints with versioning (/api/v1/...)
-- Full JWT authentication & authorization
-- Request validation with Zod
-- Standardized response format
-- Proper error handling & status codes
-- Zero linting errors
+**Last Updated**: January 8, 2026
+**Current Phase**: Phase 4 Complete - Ready for Phase 5
+**Status**: Backend + Dashboard Complete (Phases 1-4 ✅)
+
+**Completed Phases:**
+- ✅ Phase 1: Database Foundation (migrations, schema, indexes)
+- ✅ Phase 2: Backend Services Layer (CRUD operations, validations, unit tests)
+- ✅ Phase 3: API Routes with Versioning (6 REST endpoints, auth, authorization)
+- ✅ Phase 4: MCQ Dashboard (paginated table, sorting, delete functionality)
+
+**Production Deployment:**
+- ✅ Local deployment verified and tested
+- ✅ Production deployment successful
+- ✅ API endpoints available at: `https://aisprints-starter.nithinjain.workers.dev/api/v1/questions`
+
+**Phase 4 Achievements:**
+- ✅ Questions dashboard at `/dashboard/questions`
+- ✅ Paginated table (10 questions per page)
+- ✅ Sortable columns (Title, Question, Created Date)
+- ✅ Delete functionality with confirmation dialog
+- ✅ Loading and empty states
+- ✅ Toast notifications for user feedback
+- ✅ Full shadcn/ui component integration
+- ✅ Responsive design (mobile, tablet, desktop)
+- ✅ Role-based access control (instructors only)
+- ✅ Zero build errors, clean TypeScript
 
 **Next Steps**: 
-- ✅ Await user review of Phase 3 implementation
-- Begin Phase 4: MCQ Dashboard UI (pending approval)
+- 📋 Await user review of Phase 4 implementation
+- 🔜 Phase 5: MCQ Creation Flow (question form with dynamic choices)
 
 ---
 

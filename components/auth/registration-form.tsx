@@ -70,8 +70,8 @@ export function RegistrationForm() {
       const result = await response.json() as RegisterResponse;
 
       if (response.ok && result.success) {
-        // Redirect to home page on successful registration (user is already logged in)
-        router.push('/');
+        // Redirect to dashboard on successful registration (user is already logged in)
+        router.push('/dashboard');
         router.refresh();
       } else {
         // Handle validation errors or server errors
