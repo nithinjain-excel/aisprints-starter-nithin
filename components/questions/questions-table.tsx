@@ -84,28 +84,48 @@ export function QuestionsTable() {
 	const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 
+	// Convert camelCase to snake_case for API
+	const getApiSortBy = (column: SortColumn): string => {
+		const mapping: Record<SortColumn, string> = {
+			title: "title",
+			questionText: "title", // Map to title since question_text is not a sortable field
+			createdAt: "created_at",
+		};
+		return mapping[column];
+	};
+
 	// Fetch questions
 	const fetchQuestions = async (page: number = 1) => {
 		setIsLoading(true);
 		try {
+			const apiSortBy = getApiSortBy(sortBy);
 			const response = await fetch(
-				`/api/v1/questions?page=${page}&limit=10&sortBy=${sortBy}&sortOrder=${sortOrder}`
+				`/api/v1/questions?page=${page}&limit=10&sortBy=${apiSortBy}&sortOrder=${sortOrder}`
 			);
 
 			if (!response.ok) {
-				throw new Error("Failed to fetch questions");
+				const errorData = await response.json() as { error?: string };
+				console.error("API Error:", errorData);
+				throw new Error(errorData.error || "Failed to fetch questions");
 			}
 
 			const data = (await response.json()) as QuestionsResponse;
 
-			if (data.success) {
-				setQuestions(data.questions);
-				setPagination(data.pagination);
+			if (data.success && data.questions) {
+				setQuestions(data.questions || []);
+				setPagination(data.pagination || {
+					currentPage: 1,
+					totalPages: 1,
+					totalItems: 0,
+					itemsPerPage: 10,
+				});
 			} else {
-				toast.error("Failed to load questions");
+				setQuestions([]);
+				toast.error(data.message || "Failed to load questions");
 			}
 		} catch (error) {
 			console.error("Error fetching questions:", error);
+			setQuestions([]);
 			toast.error("Failed to load questions");
 		} finally {
 			setIsLoading(false);
@@ -224,7 +244,7 @@ export function QuestionsTable() {
 								</div>
 							))}
 						</div>
-					) : questions.length === 0 ? (
+					) : !questions || questions.length === 0 ? (
 						// Empty state
 						<div className="text-center py-12">
 							<p className="text-muted-foreground mb-4">
@@ -266,7 +286,7 @@ export function QuestionsTable() {
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{questions.map((question) => (
+										{questions && questions.map((question) => (
 											<TableRow key={question.id}>
 												<TableCell className="font-medium">
 													{truncate(question.title, 40)}

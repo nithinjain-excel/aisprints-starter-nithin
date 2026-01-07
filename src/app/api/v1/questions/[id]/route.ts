@@ -57,12 +57,9 @@ export async function GET(
       );
     }
     
-    // Return success response
+    // Return success response (return question directly with wrapper)
     return NextResponse.json(
-      {
-        success: true,
-        data: question,
-      },
+      question,
       { status: 200 }
     );
   } catch (error) {

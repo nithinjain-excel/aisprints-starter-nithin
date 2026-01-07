@@ -8,9 +8,11 @@
 
 import { getSessionToken } from "@/lib/utils/cookies";
 import { verifySession } from "@/lib/utils/session";
+import { getUserById } from "@/lib/services/auth-service";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export default async function DashboardPage() {
 	// Get session token
@@ -26,6 +28,12 @@ export default async function DashboardPage() {
 	if (!session) {
 		redirect("/login");
 	}
+
+	// Get user data
+	const user = await getUserById(session.userId);
+	if (!user) {
+		redirect("/login");
+	}
 	
 	// Redirect instructors to questions dashboard
 	if (session.role === "instructor") {
@@ -34,9 +42,9 @@ export default async function DashboardPage() {
 	
 	// Show "Coming Soon" for students
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center bg-muted p-6">
-			<div className="w-full max-w-2xl">
-				<Card>
+		<DashboardLayout user={user} maxWidth="lg">
+			<div className="flex min-h-[60vh] items-center justify-center">
+				<Card className="w-full max-w-2xl">
 					<CardHeader className="text-center">
 						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
 							<BookOpen className="h-8 w-8 text-primary" />
@@ -74,7 +82,7 @@ export default async function DashboardPage() {
 					</CardContent>
 				</Card>
 			</div>
-		</div>
+		</DashboardLayout>
 	);
 }
 

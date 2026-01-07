@@ -12,8 +12,10 @@
 
 import { getSessionToken } from "@/lib/utils/cookies";
 import { verifySession } from "@/lib/utils/session";
+import { getUserById } from "@/lib/services/auth-service";
 import { redirect } from "next/navigation";
 import { QuestionsTable } from "@/components/questions/questions-table";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export default async function QuestionsPage() {
 	// Get session token
@@ -34,11 +36,17 @@ export default async function QuestionsPage() {
 	if (session.role !== "instructor") {
 		redirect("/dashboard");
 	}
+
+	// Get user data for display
+	const user = await getUserById(session.userId);
+	if (!user) {
+		redirect("/login");
+	}
 	
 	return (
-		<div className="container mx-auto py-8 px-4">
+		<DashboardLayout user={user}>
 			<QuestionsTable />
-		</div>
+		</DashboardLayout>
 	);
 }
 

@@ -207,6 +207,7 @@ export const questionQuerySchema = z.object({
  * These can be used instead of manually defining types.
  */
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
+export type CreateQuestionFormInput = z.input<typeof createQuestionSchema>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionSchema>;
 export type QuestionQueryParams = z.infer<typeof questionQuerySchema>;
 

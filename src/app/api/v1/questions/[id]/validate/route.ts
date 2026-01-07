@@ -15,7 +15,7 @@ import { getSessionFromRequest, AUTH_ERRORS } from '@/lib/utils/auth-helpers';
  * Request body schema for answer validation
  */
 const validateAnswerSchema = z.object({
-  selectedChoiceId: z.string().min(1, 'Selected choice ID is required'),
+  choiceId: z.string().min(1, 'Selected choice ID is required'),
 });
 
 /**
@@ -25,17 +25,14 @@ const validateAnswerSchema = z.object({
  * 
  * Request body:
  * {
- *   "selectedChoiceId": "choice-abc123"
+ *   "choiceId": "choice-abc123"
  * }
  * 
  * Response:
  * {
- *   "success": true,
- *   "data": {
- *     "isCorrect": true,
- *     "correctChoiceId": "choice-abc123",
- *     "selectedChoiceId": "choice-abc123"
- *   }
+ *   "isCorrect": true,
+ *   "correctChoiceId": "choice-abc123",
+ *   "selectedChoiceId": "choice-abc123"
  * }
  * 
  * @example
@@ -59,18 +56,15 @@ export async function POST(
     const body = await request.json();
     
     // Validate request data
-    const { selectedChoiceId } = validateAnswerSchema.parse(body);
+    const { choiceId } = validateAnswerSchema.parse(body);
     
     // Validate answer
     const db = await getDatabase();
-    const result = await validateAnswer(db, id, selectedChoiceId);
+    const result = await validateAnswer(db, id, choiceId);
     
-    // Return success response
+    // Return success response (return result directly)
     return NextResponse.json(
-      {
-        success: true,
-        data: result,
-      },
+      result,
       { status: 200 }
     );
   } catch (error) {

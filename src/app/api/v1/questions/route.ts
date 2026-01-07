@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: result.questions,
+        questions: result.questions,
         pagination: result.pagination,
       },
       { status: 200 }
