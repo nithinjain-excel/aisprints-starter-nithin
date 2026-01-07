@@ -13,6 +13,7 @@ import {
   getQuestionCount,
 } from './questions-service';
 import * as d1Client from '../d1-client';
+import type { D1Database } from '../d1-client';
 import type { CreateQuestionInput, UpdateQuestionInput } from '../types/question';
 
 // Mock the d1-client module
@@ -51,7 +52,7 @@ vi.mock('../converters/question-converter', () => ({
 }));
 
 describe('Questions Service', () => {
-  const mockDb = {} as any;
+  const mockDb = {} as D1Database;
 
   beforeEach(() => {
     vi.clearAllMocks();
